@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { fetchImages } from "./lib/fetchImages";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ScrollLoader from "./Components/ScrollLoader/ScrollLoader";
 import { imageStore } from "./stores/imageStore";
 import { useUserStore } from "./stores/userStore";
@@ -29,20 +29,25 @@ function App() {
   const { isLoading: IsLoading, error: IsError, data: DbData } = db.useQuery({ comments: {}, reactions: {} });
   const [showComments, setShowComments] = useState(false);
   const [showSelectedImg, setShowSelectedImg] = useState(false);
-  const [individualComment,setIndividualComment] = useState([]);
-  const [recentupdate,setRecentUpdate] = useState(null);
+  const [individualComment, setIndividualComment] = useState([]);
+  const [recentupdate, setRecentUpdate] = useState(null);
+  const prevReactionCount = useRef(0);
+  const lastCommentIdRef = useRef(null);
+
+
 
   // Rewatch function
 
-   const handleSubmitComment = async(e,commentData,setCommentData) => {
+  const handleSubmitComment = async (e, commentData, setCommentData) => {
     e.preventDefault();
 
-    
+
     if (!commentData.trim()) return;
 
     try {
       await db.transact(
         db.tx.comments[crypto.randomUUID()].update({
+          userName: name,
           imageId: imgPicker.id,
           text: commentData,
           userId: id,
@@ -58,8 +63,30 @@ function App() {
     setCommentData('');
   }
 
+  const latestReaction = DbData?.reactions
+    ?.slice()
+    ?.sort((a, b) => b.createdAt - a.createdAt)[0];
 
-  const handleFeedData = (feedData)=>{
+  const latestComment = DbData?.comments
+    ?.slice()
+    ?.sort((a, b) => b.createdAt - a.createdAt)[0];
+
+
+  let latestActivity = null;
+
+  if (latestReaction && latestComment) {
+    latestActivity =
+      latestReaction.createdAt > latestComment.createdAt
+        ? { type: "reaction", data: latestReaction }
+        : { type: "comment", data: latestComment };
+  } else if (latestReaction) {
+    latestActivity = { type: "reaction", data: latestReaction };
+  } else if (latestComment) {
+    latestActivity = { type: "comment", data: latestComment };
+  }
+
+
+  const handleFeedData = (feedData) => {
     setRecentUpdate(feedData);
     setTimeout(() => {
       setRecentUpdate(null);
@@ -83,11 +110,21 @@ function App() {
     }
   }
 
+  const colorMap = {
+    red: "bg-red-600",
+    blue: "bg-blue-600",
+    green: "bg-green-600",
+    gray: "bg-gray-300",
+  };
 
-  useEffect(()=>{
-     const filteredComments = DbData?.comments?.filter((Comment,index)=> Comment?.imageId === imgPicker?.id);
+  const barColor =
+    recentupdate !== null ? colorMap[color] : "bg-gray-300";
+
+
+  useEffect(() => {
+    const filteredComments = DbData?.comments?.filter((Comment, index) => Comment?.imageId === imgPicker?.id);
     setIndividualComment(filteredComments);
-  },[showSelectedImg,DbData?.comments])
+  }, [showSelectedImg, DbData?.comments])
 
 
   const handleReactionChange = async (imageId, newEmoji) => {
@@ -103,7 +140,7 @@ function App() {
           await db.transact(
             db.tx.reactions[existingUserReaction.id].delete()
           );
-          handleFeedData(` is removed ${newEmoji} from`)
+
         } else {
           // Switching to different emoji - delete old, add new
           await db.transact([
@@ -115,19 +152,20 @@ function App() {
               createdAt: Date.now(),
             })
           ]);
-          handleFeedData(` is reacted ${newEmoji}`)
+
         }
       } else {
         // No existing reaction - add new one
         await db.transact(
           db.tx.reactions[crypto.randomUUID()].update({
+            userName: name,
             imageId: imageId,
             emojis: newEmoji,
             userId: id,
             createdAt: Date.now(),
           })
         );
-        handleFeedData(` is reacted ${newEmoji}`)
+
       }
     } catch (error) {
       console.error("Reaction error:", error);
@@ -139,13 +177,66 @@ function App() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [hasNextPage])
 
+  useEffect(() => {
+    const reactions = DbData?.reactions;
+    if (!reactions) return;
+
+    // 🚫 ignore deletes
+    if (reactions.length <= prevReactionCount.current) {
+      prevReactionCount.current = reactions.length;
+      return;
+    }
+
+    // ✅ new reaction added
+    const latestReaction = reactions
+      .slice()
+      .sort((a, b) => b.createdAt - a.createdAt)[0];
+
+    prevReactionCount.current = reactions.length;
+
+    triggerActivity({
+      type: "reaction",
+      data: latestReaction,
+    });
+  }, [DbData?.reactions]);
+
+
+
+  useEffect(() => {
+    if (!DbData?.comments?.length) return;
+
+    const latestComment = DbData.comments
+      .slice()
+      .sort((a, b) => b.createdAt - a.createdAt)[0];
+
+    if (latestComment.id !== lastCommentIdRef.current) {
+      lastCommentIdRef.current = latestComment.id;
+
+      triggerActivity({
+        type: "comment",
+        data: latestComment,
+      });
+    }
+  }, [DbData?.comments]);
+  const [activity, setActivity] = useState(null);
+
+  const triggerActivity = (activityEvent) => {
+    setActivity(activityEvent);
+
+    setTimeout(() => {
+      setActivity(null);
+    }, 2000);
+  };
+
+
+
 
   if (isLoading) return <div className="h-screen w-full flex justify-center items-center"><ScrollLoader /></div>
   if (error) return <div>Error loading images</div>;
 
   return (
     <div className="px-6 py-2">
-       <header className="bg-white border-b border-gray-200">
+      <header className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 sm:h-20">
             <div className="flex items-center gap-3">
@@ -165,34 +256,32 @@ function App() {
       </header>
 
 
-    <section 
-        className={`transition-all duration-300 border-b ${
-          recentupdate !== null  
-            ? `bg-${color}-50 border-${color}-200` 
+      <section
+        className={`transition-all duration-300 border-b ${recentupdate !== null
+            ? `bg-${color}-50 border-${color}-200`
             : 'bg-gray-50 border-gray-200'
-        }`}
+          }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-12 sm:h-14">
             <div className="flex items-center justify-center gap-3">
-              {recentupdate !== null  ? (
+              {activity ? (
                 <>
-                  <div className={`w-1 h-6 sm:h-8 rounded-full flex justify-between transition-colors duration-300 ${
-                    recentupdate !== null ? `bg-${color}-600` : 'bg-gray-300'
-                  }`} />
-                  <p className="text-sm sm:text-base text-center text-gray-700">
-                    <span className="font-semibold text-gray-900">{name}</span>
-                    {' '} {recentupdate} the image
+                  <div className={`w-1 h-6 sm:h-8 ${barColor}`} />
+                  <p className="text-sm text-gray-700">
+                    <span className="font-semibold">
+                      {activity.data.userName}
+                    </span>{" "}
+                    {activity.type === "reaction"
+                      ? `reacted ${activity.data.emojis}`
+                      : "commented"}
                   </p>
                 </>
               ) : (
-                <>
-                  <div className="w-1 h-6 sm:h-8 bg-gray-300 rounded-full" />
-                  <p className="text-sm sm:text-base text-gray-500">
-                    No recent activity
-                  </p>
-                </>
+                <p className="text-sm text-gray-500">No recent activity</p>
               )}
+
+
             </div>
           </div>
         </div>
@@ -203,14 +292,14 @@ function App() {
         {
           data?.pages.map((page, index) => {
             return page.map((img, i) => (
-             <GalleryItems
-              gallaryImg={img}
-              key={index}
-              handleShowImg={handleShowImg}
-              reactions={DbData?.reactions}
-              handleReactionChange={handleReactionChange}
-              userId={id}
-             />
+              <GalleryItems
+                gallaryImg={img}
+                key={index}
+                handleShowImg={handleShowImg}
+                reactions={DbData?.reactions}
+                handleReactionChange={handleReactionChange}
+                userId={id}
+              />
 
             ));
           })
@@ -223,17 +312,17 @@ function App() {
       </div>
 
       {
-        showSelectedImg && 
+        showSelectedImg &&
         <ImageModel
-        showImg={setShowSelectedImg}
-        showComments={showComments}
-        setShowComments={setShowComments}
-        imgSelector={imgPicker}
-        individualComment={individualComment}
-        ManageSubmitComment={handleSubmitComment}
-        reactions={DbData?.reactions}
-        userData={[id,color,name]}
-        handleReactionChange={handleReactionChange}
+          showImg={setShowSelectedImg}
+          showComments={showComments}
+          setShowComments={setShowComments}
+          imgSelector={imgPicker}
+          individualComment={individualComment}
+          ManageSubmitComment={handleSubmitComment}
+          reactions={DbData?.reactions}
+          userData={[id, color, name]}
+          handleReactionChange={handleReactionChange}
         />
       }
     </div>
