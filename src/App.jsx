@@ -83,14 +83,11 @@ function App() {
     }
   }
 
-  useEffect(()=>{
-    
-  },[individualComment])
 
   useEffect(()=>{
      const filteredComments = DbData?.comments?.filter((Comment,index)=> Comment?.imageId === imgPicker?.id);
     setIndividualComment(filteredComments);
-  },[showSelectedImg,individualComment])
+  },[showSelectedImg,DbData?.comments])
 
 
   const handleReactionChange = async (imageId, newEmoji) => {
