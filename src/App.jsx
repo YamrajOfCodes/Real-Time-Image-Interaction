@@ -6,7 +6,7 @@ import { imageStore } from "./stores/imageStore";
 import { useUserStore } from "./stores/userStore";
 import { db } from "./lib/InstantDbConnect";
 import ImageModel from "./Components/ImageModel/ImageModel";
-import GalleryItems from "./Components/galleryItems/GalleryItems";
+import GalleryItems from "./Components/galleryItems/GalleryItems.jsx";
 import { Circle, Eye } from "lucide-react";
 
 function App() {

@@ -65,4 +65,4 @@ const GalleryItems = ({ gallaryImg, handleShowImg, reactions, handleReactionChan
     )
 }
 
-export default GalleryItems
+export default GalleryItems;
