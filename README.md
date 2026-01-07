@@ -82,9 +82,7 @@ Unlike comments, reactions must be limited to one per user per image, while stil
 
 Solution:
 Before inserting a reaction, the app checks for an existing reaction by the same user for the same image.
-
 If one exists, it is updated instead of duplicated.
-
 This logic prevents reaction spam while preserving real-time behavior.
 
 2. Real-Time Feed Synchronization
@@ -116,14 +114,11 @@ It simplified async logic, caching, and error handling dramatically.
 ## 📝 Future Enhancements
 
 With more time, I would add:
-
 Users can delete their own comments
-
 Users can like individual comments
-
 Users can reply to comments (nested/threaded comments)
-
 Users can upload and post images
+
 ---
 
 Built with a focus on clean code, scalability, and developer experience.
