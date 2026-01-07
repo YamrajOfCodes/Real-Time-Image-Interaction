@@ -15,7 +15,7 @@ const ImageModel = (
         reactions,
     }) => {
     const [commentText, setCommentText] = useState('');
-    const [id,color,name] = userData
+    const [id, color] = userData;
 
     useEffect(() => {
 
@@ -37,57 +37,56 @@ const ImageModel = (
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className={`flex-1 flex items-center justify-center bg-black p-4 ${showComments ? 'hidden md:flex' : 'flex'}`}>
-                <div>
+                    <div>
                         <img
-                        src={imgSelector.urls.regular}
-                        alt={imgSelector.alt_description || "Selected image"}
-                        className="max-h-full max-w-full object-contain"
-                    />
-                     <div className="flex items-center gap-2 text-white">
-                    {reactions
-                        ?.filter((reaction) => reaction.imageId === imgSelector.id)
-                        .reduce((acc, curr) => {
-                            // Find if this emoji already exists in accumulator
-                            const existing = acc.find(item => item.emojis === curr.emojis);
+                            src={imgSelector.urls.regular}
+                            alt={imgSelector.alt_description || "Selected image"}
+                            className="max-h-full max-w-full object-contain"
+                        />
+                        <div className="flex items-center gap-2 text-white">
+                            {reactions
+                                ?.filter((reaction) => reaction.imageId === imgSelector.id)
+                                .reduce((acc, curr) => {
+                                    const existing = acc.find(item => item.emojis === curr.emojis);
 
-                            if (existing) {
-                                existing.count++;
-                            } else {
-                                acc.push({ ...curr, count: 1 });
+                                    if (existing) {
+                                        existing.count++;
+                                    } else {
+                                        acc.push({ ...curr, count: 1 });
+                                    }
+
+                                    return acc;
+                                }, [])
+                                .map((element, index) => {
+                                    const userReacted = reactions?.some(
+                                        r => r.imageId === imgSelector.id && r.emojis === element.emojis && r.userId === id
+                                    );
+
+                                    return (
+                                        <button
+                                            key={index}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleReactionChange(imgSelector.id, element.emojis);
+                                            }}
+                                            className={`flex items-center gap-1 backdrop-blur-sm px-2 py-1 rounded-full transition ${userReacted
+                                                ? 'bg-blue-500/40 border border-blue-400'
+                                                : 'bg-white/20 hover:bg-white/30'
+                                                }`}
+                                        >
+                                            <span className="text-base">{element.emojis}</span>
+                                            <span className="text-xs font-medium">{element.count}</span>
+                                        </button>
+                                    );
+                                })
                             }
+                            <EmojiReactionPicker
+                                imageId={imgSelector.id}
+                                toggleReaction={handleReactionChange}
+                            />
 
-                            return acc;
-                        }, [])
-                        .map((element, index) => {
-                            const userReacted = reactions?.some(
-                                r => r.imageId === imgSelector.id && r.emojis === element.emojis && r.userId === id
-                            );
-
-                            return (
-                                <button
-                                    key={index}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleReactionChange(gallaryImg.id, element.emojis);
-                                    }}
-                                    className={`flex items-center gap-1 backdrop-blur-sm px-2 py-1 rounded-full transition ${userReacted
-                                        ? 'bg-blue-500/40 border border-blue-400'
-                                        : 'bg-white/20 hover:bg-white/30'
-                                        }`}
-                                >
-                                    <span className="text-base">{element.emojis}</span>
-                                    <span className="text-xs font-medium">{element.count}</span>
-                                </button>
-                            );
-                        })
-                    }
-                    <EmojiReactionPicker
-                        imageId={imgSelector.id}
-                        toggleReaction={handleReactionChange}
-                    />
-
-                </div>
-                </div>
+                        </div>
+                    </div>
 
                     {/* Mobile: Comments toggle button */}
                     <button
@@ -129,11 +128,14 @@ const ImageModel = (
                             individualComment?.map((comment, index) => {
                                 return (
                                     <div key={comment.id} className="flex gap-3">
-                                        <div className={`w-8 h-8  rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 bg-${color}-500`}>
+                                        <div className={`w-8 h-8  rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 bg-blue-400`}>
+                                            {
+                                                comment.userName.slice(0,1)
+                                            }
                                         </div>
                                         <div className="flex-1">
                                             <div className="bg-gray-100 rounded-lg p-3">
-                                                <p className="font-semibold text-sm text-gray-900">{name}</p>
+                                                <p className="font-semibold text-sm text-gray-900">{comment.userName}</p>
                                                 <p className="text-sm text-gray-700 mt-1 break-words">{comment.text}</p>
                                             </div>
                                         </div>
@@ -143,7 +145,6 @@ const ImageModel = (
                         )}
                     </div>
 
-                    {/* Comment input - fixed at bottom */}
                     <div className="p-4 border-t border-gray-200 bg-white">
                         <div className="flex gap-2">
                             <input

@@ -1,8 +1,11 @@
 import axios from "axios";
 
+const AUTHORIZATION = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
+
+
 export const unsplash = axios.create({
   baseURL: "https://api.unsplash.com",
   headers: {
-    Authorization: `Client-ID XoPRrhpn6-_rsvNu2ivHWYZDortB-303pd8s9I_fhVI`,
+    Authorization:AUTHORIZATION
   },
 });

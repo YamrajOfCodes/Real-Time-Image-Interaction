@@ -1,7 +1,7 @@
-import { init } from "@instantdb/react"; // Changed from @instantdb/core
+import { init } from "@instantdb/react";
 import { i } from "@instantdb/core";
 
-const APP_ID = "a96d6b07-fac9-437d-8fbc-e08adb3222f7";
+const APP_ID =import.meta.env.VITE_INSTANT_APP_ID;
 
 export const schema = i.schema({
   entities: {
