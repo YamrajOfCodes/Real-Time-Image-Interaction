@@ -19,7 +19,7 @@ const FeedSection = React.memo(({letestUpdate,activity,barColor})=>{
                       {activity.data.userName}
                     </span>{" "}
                     {activity.type === "reaction"
-                      ? `reacted to the image ${activity.data.emojis}`
+                      ? `reacted ${activity.data.emojis} to the image`
                       : "commented on image"}
                   </p>
                 </>
