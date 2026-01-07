@@ -40,7 +40,7 @@ npm run build
 API Handling Strategy
 
 The app relies on InstantDB’s real-time sync instead of a traditional REST API layer.
-There is no separate backend server — client-side mutations and subscriptions directly interact with InstantDB.
+There is no separate backend server, client-side mutations and subscriptions directly interact with InstantDB.
 
 Key points:
 
@@ -112,12 +112,16 @@ It simplified async logic, caching, and error handling dramatically.
 
 
 ## 📝 Future Enhancements
-
 With more time, I would add:
+
 Users can delete their own comments
+
 Users can like individual comments
+
 Users can reply to comments (nested/threaded comments)
+
 Users can upload and post images
+
 
 ---
 
