@@ -1,7 +1,6 @@
 import React from 'react'
 
 const FeedSection = React.memo(({letestUpdate,activity,barColor})=>{
-    console.log("rerender")
  return (
    <section
         className={`transition-all duration-300 border-b ${letestUpdate !== null
@@ -20,8 +19,8 @@ const FeedSection = React.memo(({letestUpdate,activity,barColor})=>{
                       {activity.data.userName}
                     </span>{" "}
                     {activity.type === "reaction"
-                      ? `reacted ${activity.data.emojis}`
-                      : "commented"}
+                      ? `reacted to the image ${activity.data.emojis}`
+                      : "commented on image"}
                   </p>
                 </>
               ) : (
