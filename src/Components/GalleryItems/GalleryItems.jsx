@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { IconButton, Tooltip } from "@mui/material";
+import {motion} from "motion/react"
 import AddReactionIcon from "@mui/icons-material/AddReaction";
 import EmojiReactionPicker from "../EmojiPicker/EmojiReactionPicker";
 
@@ -11,7 +12,6 @@ const GalleryItems = ({
   userId,
 }) => {
 
-  // ✅ Memoize expensive aggregation
   const aggregatedReactions = useMemo(() => {
     return reactions
       ?.filter(r => r.imageId === gallaryImg.id)
@@ -27,7 +27,17 @@ const GalleryItems = ({
   }, [reactions, gallaryImg.id]);
 
   return (
-    <div className="group aspect-square overflow-hidden rounded-lg relative">
+    <motion.div className="group aspect-square overflow-hidden rounded-lg relative cursor-pointer"
+     whileHover={{
+    scale: 1.05,
+    boxShadow: "0px 10px 30px rgba(0,0,0,0.25)"
+  }}
+  transition={{
+    type: "spring",
+    stiffness: 300,
+    damping: 20
+  }}
+    >
       <img
         src={gallaryImg.urls.small}
         alt={gallaryImg.alt_description}
@@ -35,11 +45,8 @@ const GalleryItems = ({
         onClick={() => handleShowImg(gallaryImg)}
       />
 
-      {/* Overlay */}
       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent p-3">
         <div className="flex items-center gap-2 text-white flex-wrap">
-
-          {/* Existing reactions */}
           {aggregatedReactions?.map((reaction, index) => {
             const userReacted = reactions?.some(
               r =>
@@ -79,7 +86,6 @@ const GalleryItems = ({
             );
           })}
 
-          {/* Add reaction */}
           <Tooltip title="Add reaction">
             <IconButton
               size="small"
@@ -96,7 +102,7 @@ const GalleryItems = ({
 
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
